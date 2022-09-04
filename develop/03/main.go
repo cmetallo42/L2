@@ -72,6 +72,10 @@ func (x *SliceOfSliceOfString) String() (s string) {
 		s += strings.Join(x.values[i], " ") + "\n"
 	}
 
+	if len(s) > 0 {
+		s = s[:len(s)-1]
+	}
+
 	return
 }
 
@@ -82,15 +86,15 @@ func (x *SliceOfSliceOfString) Sort()         { sort.Sort(x) }
 func main() {
 	keys := make(map[string]struct{})
 
-	unsorted := SliceOfSliceOfString{
+	sorting := SliceOfSliceOfString{
 		values: make([][]string, 0, 2),
 		column: 0,
 	}
 
 	for _, args := range os.Args {
 		if _, err := strconv.Atoi(args); err == nil {
-			unsorted.column, _ = strconv.Atoi(args)
-			unsorted.column -= 1
+			sorting.column, _ = strconv.Atoi(args)
+			sorting.column -= 1
 		}
 		if args[0] == '-' {
 			for _, r := range args {
@@ -118,31 +122,36 @@ func main() {
 				continue
 			}
 
-			unsorted.values = append(unsorted.values, strings.Split(ss[i], " ")) // записываем массивы слов как строки
+			sorting.values = append(sorting.values, strings.Split(ss[i], " ")) // записываем массивы слов как строки
 			exists[ss[i]] = struct{}{}
 		}
 	} else {
 		for i := range ss { // бьём файл на строки
-			unsorted.values = append(unsorted.values, strings.Split(ss[i], " ")) // записываем массивы слов как строки
+			sorting.values = append(sorting.values, strings.Split(ss[i], " ")) // записываем массивы слов как строки
 		}
 	}
 
 	if keyK {
-		if unsorted.column < 0 {
+		if sorting.column < 0 {
 			fmt.Println("Flag -k needs value > 0")
 			return
 		}
 	}
 
 	if keyR {
-		unsorted.reverse = true
+		sorting.reverse = true
 	}
 
 	if keyN {
-		unsorted.number = true
+		sorting.number = true
 	}
 
-	sort.Sort(&unsorted)
+	sort.Sort(&sorting)
 
-	fmt.Println(unsorted.String())
+	fmt.Println(sorting.String())
+
+	err := os.WriteFile("sorted.txt", []byte(sorting.String()), 0o777)
+	if err != nil {
+		panic(err)
+	}
 }
