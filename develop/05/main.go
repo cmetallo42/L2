@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -10,6 +11,7 @@ import (
 func main() {
 	var files []string
 	flag := false
+	counter := 0
 	var pathPlusFile string
 	path := "examples/"
 	var substr string
@@ -52,10 +54,10 @@ func main() {
 	_, keyA := keys['A']
 	_, keyB := keys['B']
 	_, keyC := keys['C']
-	// _, keyc := keys['c']
-	// _, keyi := keys['i']
-	// _, keyv := keys['v']
-	// _, keyF := keys['F']
+	_, keyc := keys['c']
+	_, keyi := keys['i']
+	_, keyv := keys['v']
+	_, keyF := keys['F']
 	_, keyn := keys['n']
 
 	if strings.Contains(os.Args[len(os.Args)-1], "main.go") || strings.Contains(os.Args[len(os.Args)-1], "*.txt") {
@@ -63,7 +65,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fileInfo, err := f.Readdir(-1)
+		fileInfo, err := f.Readdir(-1)	
 		f.Close()
 		if err != nil {
 			panic(err)
@@ -72,58 +74,82 @@ func main() {
 		for _, file := range fileInfo {
 			files = append(files, file.Name())
 		}
+	} else {
+		files = append(files, os.Args[len(os.Args)-1])
+	}
+	for _, file := range files {
+		tmp, err := os.ReadFile(path + file)
+		if err != nil {
+			panic(err)
+		}
+		pathPlusFile = path + file + ":"
+		tmpStr := strings.Split(string(tmp), "\n")
+		for i, t := range tmpStr {
+			iStr := strconv.Itoa(i + 1)
+			if keyi {
+				t = strings.ToLower(t)
+				substr = strings.ToLower(substr)
+			}
+			if keyF && t != substr {
+				continue
+			}
 
-		for _, file := range files {
-			tmp, err := os.ReadFile(path + file)
+			r, err := regexp.Compile(substr)
 			if err != nil {
 				panic(err)
 			}
-			pathPlusFile = path + file + ":"
-			tmpStr := strings.Split(string(tmp), "\n")
-			for i, t := range tmpStr {
-				iStr := strconv.Itoa(i + 1)
-				if strings.Contains(t, substr) {
-					if keyn {
-						pathPlusFile = path + file + ":" + iStr + ":"
-					}
-					if keyA {
-						aInt := keys['A']
-						for j := 0; j <= aInt; j++ {
-							if i+j > len(tmpStr)-1 {
-								break
-							}
-							if keyn {
-								pathPlusFile = path + file + ":" + strconv.Itoa(i+j) + ":"
-							}
-							sliceOfStrings = append(sliceOfStrings, pathPlusFile+tmpStr[i+j])
+
+			check := r.MatchString(t)
+
+			if (check && !keyv) || (keyv && !check && len(t) != 0) {
+				if keyc {
+					counter += 1
+					continue
+				}
+				if keyn {
+					pathPlusFile = path + file + ":" + iStr + ":"
+				}
+				if keyA {
+					aInt := keys['A']
+					for j := 0; j <= aInt; j++ {
+						if i+j > len(tmpStr)-1 {
+							continue
 						}
-					}
-					if keyB {
-						bInt := keys['B']
-						for j := bInt; j >= 0; j-- {
-							if i-j < 0 {
-								break
-							}
-							if keyn {
-								pathPlusFile = path + file + ":" + strconv.Itoa(i-j) + ":"
-							}
-							sliceOfStrings = append(sliceOfStrings, pathPlusFile+tmpStr[i-j])
+						if keyn {
+							pathPlusFile = path + file + ":" + strconv.Itoa(i+j) + ":"
 						}
+						sliceOfStrings = append(sliceOfStrings, pathPlusFile+tmpStr[i+j])
 					}
-					if keyC {
-						cInt := keys['C']
-						for j := 0 - cInt; j <= cInt; j++ {
-							if i+j < 0 || i+j > len(tmpStr)-1 {
-								break
-							}
-							if keyn {
-								pathPlusFile = path + file + ":" + strconv.Itoa(i+j) + ":"
-							}
-							sliceOfStrings = append(sliceOfStrings, pathPlusFile+tmpStr[i+j])
+				} else if keyB {
+					bInt := keys['B']
+					for j := bInt; j >= 0; j-- {
+						if i-j < 0 {
+							continue
 						}
+						if keyn {
+							pathPlusFile = path + file + ":" + strconv.Itoa(i-j) + ":"
+						}
+						sliceOfStrings = append(sliceOfStrings, pathPlusFile+tmpStr[i-j])
 					}
+				} else if keyC {
+					cInt := keys['C']
+					for j := 0 - cInt; j <= cInt; j++ {
+						if i+j < 0 || i+j > len(tmpStr)-1 {
+							continue
+						}
+						if keyn {
+							pathPlusFile = path + file + ":" + strconv.Itoa(i+j) + ":"
+						}
+						sliceOfStrings = append(sliceOfStrings, pathPlusFile+tmpStr[i+j])
+					}
+				} else {
+					sliceOfStrings = append(sliceOfStrings, pathPlusFile+t)
 				}
 			}
+		}
+		if keyc {
+			sliceOfStrings = append(sliceOfStrings, path+file+":"+strconv.Itoa(counter))
+			counter = 0
 		}
 	}
 	for _, s := range sliceOfStrings {
