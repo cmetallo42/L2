@@ -12,14 +12,14 @@ func merge(channels ...<-chan any) <-chan any {
 		var wg sync.WaitGroup
 		wg.Add(len(channels))
 
-		for _, ch := range channels {
-			go func(ch <-chan any) {
+		for i, ch := range channels {
+			go func(ch <-chan any, i int) {
 				for v := range ch {
 					out <- v
 				}
-				fmt.Println("Done")
+				fmt.Printf("Channel %v is Done\n", i)
 				wg.Done()
-			}(ch)
+			}(ch, i)
 		}
 		wg.Wait()
 		fmt.Println("All channels is closed!")
