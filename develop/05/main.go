@@ -10,11 +10,11 @@ import (
 
 func main() {
 	var files []string
+	var pathPlusFile string
+	var substr string
+	path := "examples/"
 	flag := false
 	counter := 0
-	var pathPlusFile string
-	path := "examples/"
-	var substr string
 	keys := make(map[rune]int)
 	sliceOfStrings := make([]string, 0, 1)
 
@@ -22,6 +22,9 @@ func main() {
 		if arg[0] == '-' {
 			for _, r := range arg {
 				if r == 'A' || r == 'B' || r == 'C' {
+					if i+1 > len(arg)-1 {
+						panic("Out of range")
+					}
 					nextI, err := strconv.Atoi(os.Args[i+1])
 					if err != nil {
 						panic(err)
@@ -65,7 +68,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fileInfo, err := f.Readdir(-1)	
+		fileInfo, err := f.Readdir(-1)
 		f.Close()
 		if err != nil {
 			panic(err)
