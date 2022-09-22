@@ -35,7 +35,7 @@ func Main(configuration *Configuration) (err error) {
 		return
 	}
 
-	s := iserver.NewServer(handlerInit(d))
+	s := iserver.NewServer(logger(handlerInit(d)))
 	defer s.Close()
 
 	signals := make(chan os.Signal, 1)
@@ -50,6 +50,16 @@ func Main(configuration *Configuration) (err error) {
 	select {
 	case err = <-errs:
 	case <-signals:
+	}
+
+	return
+}
+
+func logger(handler http.HandlerFunc) (middlewared http.HandlerFunc) {
+	middlewared = func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, r.URL.String(), r.Form.Encode())
+
+		handler(w, r);
 	}
 
 	return
