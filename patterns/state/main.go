@@ -112,7 +112,7 @@ func (i *hasItemState) requestItem() error {
 		i.vendingMachine.setState(i.vendingMachine.noItem)
 		return fmt.Errorf("no item present")
 	}
-	fmt.Printf("Item requestd\n")
+	fmt.Printf("Item requested\n")
 	i.vendingMachine.setState(i.vendingMachine.itemRequested)
 	return nil
 }
